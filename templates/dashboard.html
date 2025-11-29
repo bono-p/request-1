@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Tableau de Bord</h2>
+
+<p>
+    Bienvenue,
+    {{ user.name }} {{ user.last_name }}
+    (Matricule : {{ user.matricule }})
+</p>
+
+<div>
+    <h3>Actions rapides</h3>
+    <ul>
+        <li><a href="/submit-request">Soumettre une requête</a></li>
+        <li><a href="/my-requests">Voir mes requêtes</a></li>
+    </ul>
+</div>
+
+{% endblock %}
