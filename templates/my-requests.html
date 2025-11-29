@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Mes Requêtes</h2>
+
+{% if requests and requests|length > 0 %}
+
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Date de soumission</th>
+            <th>Cycle</th>
+            <th>Niveau</th>
+            <th>UE</th>
+            <th>Statut</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for req in requests %}
+        <tr>
+            <td>
+                {% if req.created_at %}
+                    {% if req.created_at.__class__.__name__ == 'datetime' %}
+                        {{ req.created_at.strftime('%Y/%m/%d %H:%M') }}
+                    {% else %}
+                        {{ req.created_at[:16] | replace("-", "/") }}
+                    {% endif %}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>{{ req.cycle }}</td>
+            <td>{{ req.level }}</td>
+            <td>
+                {{ req.nom_code_ue[:50] }}
+                {% if req.nom_code_ue|length > 50 %}...{% endif %}
+            </td>
+            <td>
+                {% if req.note_exam or req.note_cc or req.note_tp or req.note_tpe or req.autre %}
+                    ✔️ Traité partiellement
+                {% else %}
+                    ⏳ En cours de traitement
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else %}
+<p>Aucune requête soumise pour le moment.</p>
+{% endif %}
+
+<p><a href="/submit-request">Soumettre une nouvelle requête</a></p>
+{% endblock %}
