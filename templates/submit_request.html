@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Soumettre une Requête</h2>
+
+{% if error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+
+<form method="post">
+
+    <div>
+        <label>Cycle :</label>
+        <input type="text" name="cycle" maxlength="50" required>
+    </div>
+
+    <div>
+        <label>Niveau :</label>
+        <input type="number" name="level" min="0" max="255" required>
+    </div>
+
+    <div>
+        <label>Nom / Code UE :</label>
+        <textarea name="nom_code_ue" maxlength="2048" required></textarea>
+    </div>
+
+    <fieldset>
+        <legend>Type de requête</legend>
+
+        <div>
+            <input type="checkbox" name="note_exam" value="true">
+            <label>Note d'examen</label>
+        </div>
+
+        <div>
+            <input type="checkbox" name="note_cc" value="true">
+            <label>Note de contrôle continu</label>
+        </div>
+
+        <div>
+            <input type="checkbox" name="note_tp" value="true">
+            <label>Note de TP</label>
+        </div>
+
+        <div>
+            <input type="checkbox" name="note_tpe" value="true">
+            <label>Note de TPE</label>
+        </div>
+
+        <div>
+            <input type="checkbox" name="autre" value="true">
+            <label>Autre</label>
+        </div>
+
+        <div>
+            <input type="checkbox" name="just_p" value="true">
+            <label>Justificatif de présence</label>
+        </div>
+    </fieldset>
+
+    <div>
+        <label>Commentaire :</label>
+        <textarea name="comment" maxlength="5000"></textarea>
+    </div>
+
+    <button type="submit">Soumettre la requête</button>
+
+</form>
+
+{% endblock %}
