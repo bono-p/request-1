@@ -1,1 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des Requêtes</title>
+</head>
+<body>
 
+<nav>
+    {% if user %}
+        <a href="/dashboard">Dashboard</a> |
+        <a href="/my-requests">Mes Requêtes</a> |
+        <a href="/logout">Déconnexion</a>
+    {% else %}
+        <a href="/">Accueil</a> |
+        <a href="/login">Connexion</a> |
+        <a href="/register">Inscription</a>
+    {% endif %}
+</nav>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+</body>
+</html>
