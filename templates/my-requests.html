@@ -67,7 +67,13 @@
 
 {% endblock %}
 
--->
+
+
+
+
+
+
+
 
 
 
@@ -126,4 +132,73 @@
 {% endif %}
 
 <p><a href="/submit-request">Soumettre une nouvelle requête</a></p>
+{% endblock %}
+
+-->
+
+
+
+
+
+
+
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Mes Requêtes</h2>
+
+{% if requests and requests|length > 0 %}
+
+<table border="1" cellpadding="6">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Cycle</th>
+            <th>Niveau</th>
+            <th>UE</th>
+            <th>Statut</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for req in requests %}
+        <tr>
+            <td>
+                {% if req.created_at %}
+                    {{ req.created_at[:16] | replace("-", "/") }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+
+            <td>{{ req.cycle }}</td>
+            <td>{{ req.level }}</td>
+
+            <td>
+                {{ req.nom_code_ue[:50] }}
+                {% if req.nom_code_ue|length > 50 %}...{% endif %}
+            </td>
+
+            <td>
+                {# CORRECTION : Utilisation du champ state de la base de données #}
+                {% if req.state %}
+                    ✅ Traitée
+                {% else %}
+                    ⏳ En cours de traitement
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>Aucune requête pour le moment.</p>
+
+{% endif %}
+
+<p><a href="/submit-request">Soumettre une nouvelle requête</a></p>
+
 {% endblock %}
