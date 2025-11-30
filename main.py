@@ -344,6 +344,22 @@ async def test_db():
         }
 
 
+@app.get("/debug-requests")
+async def debug_requests():
+    """Route temporaire pour debug"""
+    try:
+        all_requests = await db.fetch_all("""
+            SELECT r.request_id, r.user_id, r.all_name, u.name, u.last_name 
+            FROM requests r 
+            LEFT JOIN users u ON r.user_id = u.user_id
+        """)
+        return {"status": "success", "all_requests": all_requests}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+
+
 @app.get("/db-status")
 async def db_status():
     """Statut simplifié de la base de données"""
