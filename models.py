@@ -224,7 +224,7 @@ class RequestSubmit(BaseModel):
     level: int
     nom_code_ue: str
 
-    # CORRECTION : Ajout du champ state manquant
+    
     state: bool = False
     
     note_exam: bool = False
