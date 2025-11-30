@@ -3,41 +3,49 @@
 {% block content %}
 <h2>Mes Requêtes</h2>
 
+<!-- DEBUG -->
+<div style="background: #f0f0f0; padding: 10px; margin: 10px 0;">
+    <strong>DEBUG:</strong><br>
+    User: {{ user }}<br>
+    Requests length: {{ requests|length if requests else 0 }}<br>
+    Requests: {{ requests }}
+</div>
+
 {% if requests and requests|length > 0 %}
 
-<table border="1" cellpadding="5" cellspacing="0">
+<table border="1" cellpadding="6">
     <thead>
         <tr>
-            <th>Date de soumission</th>
+            <th>Date</th>
             <th>Cycle</th>
             <th>Niveau</th>
             <th>UE</th>
             <th>Statut</th>
         </tr>
     </thead>
+
     <tbody>
         {% for req in requests %}
         <tr>
             <td>
                 {% if req.created_at %}
-                    {% if req.created_at.__class__.__name__ == 'datetime' %}
-                        {{ req.created_at.strftime('%Y/%m/%d %H:%M') }}
-                    {% else %}
-                        {{ req.created_at[:16] | replace("-", "/") }}
-                    {% endif %}
+                    {{ req.created_at[:16] | replace("-", "/") }}
                 {% else %}
                     -
                 {% endif %}
             </td>
+
             <td>{{ req.cycle }}</td>
             <td>{{ req.level }}</td>
+
             <td>
                 {{ req.nom_code_ue[:50] }}
                 {% if req.nom_code_ue|length > 50 %}...{% endif %}
             </td>
+
             <td>
-                {% if req.note_exam or req.note_cc or req.note_tp or req.note_tpe or req.autre %}
-                    ✔️ Traité partiellement
+                {% if req.state %}
+                    ✅ Traitée
                 {% else %}
                     ⏳ En cours de traitement
                 {% endif %}
@@ -45,11 +53,15 @@
         </tr>
         {% endfor %}
     </tbody>
+
 </table>
 
 {% else %}
-<p>Aucune requête soumise pour le moment.</p>
+
+<p>Aucune requête pour le moment.</p>
+
 {% endif %}
 
 <p><a href="/submit-request">Soumettre une nouvelle requête</a></p>
+
 {% endblock %}
