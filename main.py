@@ -276,16 +276,59 @@ async def submit_request(request: Request, current_user=Depends(get_current_user
         })
 
 
+
+
+
+
 @app.get("/my-requests", response_class=HTMLResponse)
 async def my_requests(request: Request, current_user=Depends(get_current_user)):
     try:
+        print(f"🔍 DEBUG - User connecté: {current_user}")
+        
+        # Vérifiez aussi toutes les requêtes dans la base
+        all_requests = await db.fetch_all("SELECT user_id, request_id FROM requests")
+        print(f"🔍 DEBUG - Toutes les requêtes dans la DB: {all_requests}")
+        
         rows = await db.fetch_all(
-            """SELECT request_id, all_name, matricule, cycle, level, nom_code_ue,
+            """SELECT request_id, all_name, state, matricule, cycle, level, nom_code_ue,
                       note_exam, note_cc, note_tp, note_tpe, autre, comment,
                       just_p, created_at
                FROM requests
                WHERE user_id = %s
                ORDER BY created_at DESC""",
+            (current_user["user_id"],)
+        )
+        
+        print(f"🔍 DEBUG - Requêtes trouvées pour user_id {current_user['user_id']}: {len(rows)}")
+        
+        return templates.TemplateResponse("my-requests.html", {
+            "request": request,
+            "user": current_user,
+            "requests": rows
+        })
+
+    except Exception as e:
+        print(f"❌ Erreur dans my_requests: {e}")
+        return templates.TemplateResponse("my-requests.html", {
+            "request": request,
+            "user": current_user,
+            "error": str(e),
+            "requests": []
+        })
+
+
+
+"""
+@app.get("/my-requests", response_class=HTMLResponse)
+async def my_requests(request: Request, current_user=Depends(get_current_user)):
+    try:
+        rows = await db.fetch_all(
+            """"""SELECT request_id, all_name, matricule, cycle, level, nom_code_ue,
+                      note_exam, note_cc, note_tp, note_tpe, autre, comment,
+                      just_p, created_at
+               FROM requests
+               WHERE user_id = %s
+               ORDER BY created_at DESC"""""",
             (current_user["user_id"],)
         )
 
@@ -303,7 +346,7 @@ async def my_requests(request: Request, current_user=Depends(get_current_user)):
             "requests": []
         })
 
-
+"""
 @app.get("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=303)
@@ -353,41 +396,7 @@ async def test_db():
 
 
 
-@app.get("/my-requests", response_class=HTMLResponse)
-async def my_requests(request: Request, current_user=Depends(get_current_user)):
-    try:
-        print(f"🔍 DEBUG - User connecté: {current_user}")
-        
-        # Vérifiez aussi toutes les requêtes dans la base
-        all_requests = await db.fetch_all("SELECT user_id, request_id FROM requests")
-        print(f"🔍 DEBUG - Toutes les requêtes dans la DB: {all_requests}")
-        
-        rows = await db.fetch_all(
-            """SELECT request_id, all_name, state, matricule, cycle, level, nom_code_ue,
-                      note_exam, note_cc, note_tp, note_tpe, autre, comment,
-                      just_p, created_at
-               FROM requests
-               WHERE user_id = %s
-               ORDER BY created_at DESC""",
-            (current_user["user_id"],)
-        )
-        
-        print(f"🔍 DEBUG - Requêtes trouvées pour user_id {current_user['user_id']}: {len(rows)}")
-        
-        return templates.TemplateResponse("my-requests.html", {
-            "request": request,
-            "user": current_user,
-            "requests": rows
-        })
 
-    except Exception as e:
-        print(f"❌ Erreur dans my_requests: {e}")
-        return templates.TemplateResponse("my-requests.html", {
-            "request": request,
-            "user": current_user,
-            "error": str(e),
-            "requests": []
-        })
 
 
 
