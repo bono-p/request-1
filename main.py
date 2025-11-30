@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, status, Cookie
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -16,13 +15,28 @@ from auth import hash_password, verify_password
 
 
 # --------------------------------------------------------
-# Lifespan : init DB au démarrage Render
+# Lifespan : init DB au démarrage Render - CORRIGÉ
 # --------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await db.init_db()
+    # Démarrage - initialisation de la base de données
+    print("🔄 Démarrage de l'application...")
+    try:
+        await db.init_db()
+        print("✅ Base de données initialisée avec succès")
+    except Exception as e:
+        print(f"❌ Erreur lors de l'initialisation de la base: {e}")
+        raise
+    
     yield
-    await db.close()
+    
+    # Arrêt - fermeture propre des connexions
+    print("🔄 Arrêt de l'application...")
+    try:
+        await db.close()
+        print("✅ Connexions fermées avec succès")
+    except Exception as e:
+        print(f"⚠️ Erreur lors de la fermeture: {e}")
 
 
 app = FastAPI(
@@ -180,7 +194,8 @@ async def login_user(request: Request):
             key="user_data",
             value=cookie,
             httponly=True,
-            max_age=86400
+            max_age=86400,
+            samesite="lax"
         )
         return response
 
@@ -297,23 +312,76 @@ async def logout():
 
 
 # --------------------------------------------------------
-# Debug
+# Debug - AMÉLIORÉ
 # --------------------------------------------------------
 @app.get("/test-db")
 async def test_db():
-    return await db.test_connection()
+    """Test complet de la connexion et des opérations de base"""
+    try:
+        # Test de connexion
+        connection_test = await db.test_connection()
+        
+        # Test des tables
+        users_count = await db.fetch_one("SELECT COUNT(*) AS count FROM users")
+        requests_count = await db.fetch_one("SELECT COUNT(*) AS count FROM requests")
+        
+        # Test d'écriture
+        test_insert = await db.execute_query("SELECT 1 as test")
+        
+        return {
+            "status": "success",
+            "connection": connection_test,
+            "tables": {
+                "users": users_count["count"],
+                "requests": requests_count["count"]
+            },
+            "write_test": "ok" if test_insert is not None else "failed"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
 
 
 @app.get("/db-status")
 async def db_status():
-    users = await db.fetch_one("SELECT COUNT(*) AS count FROM users")
-    requests = await db.fetch_one("SELECT COUNT(*) AS count FROM requests")
+    """Statut simplifié de la base de données"""
+    try:
+        users = await db.fetch_one("SELECT COUNT(*) AS count FROM users")
+        requests = await db.fetch_one("SELECT COUNT(*) AS count FROM requests")
+        is_connected = await db.is_connected()
 
-    return {
-        "status": "success",
-        "users": users["count"],
-        "requests": requests["count"]
-    }
+        return {
+            "status": "success",
+            "connected": is_connected,
+            "users": users["count"],
+            "requests": requests["count"]
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "connected": False,
+            "message": str(e)
+        }
+
+
+@app.get("/health")
+async def health_check():
+    """Endpoint de santé pour Render"""
+    try:
+        is_connected = await db.is_connected()
+        return {
+            "status": "healthy" if is_connected else "unhealthy",
+            "database": "connected" if is_connected else "disconnected",
+            "timestamp": __import__("datetime").datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "database": "error",
+            "error": str(e)
+        }
 
 
 # --------------------------------------------------------
