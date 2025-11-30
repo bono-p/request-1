@@ -3,7 +3,7 @@
 {% block content %}
 <h2>Mes Requêtes</h2>
 
- DEBUG 
+<!-- DEBUG -->
 <div style="background: #f0f0f0; padding: 10px; margin: 10px 0;">
     <strong>DEBUG:</strong><br>
     User: {{ user }}<br>
@@ -29,7 +29,7 @@
         <tr>
             <td>
                 {% if req.created_at %}
-                    {{ req.created_at[:16] | replace("-", "/") }}
+                    {{ req.created_at.strftime("%Y/%m/%d %H:%M") }}
                 {% else %}
                     -
                 {% endif %}
@@ -65,11 +65,3 @@
 <p><a href="/submit-request">Soumettre une nouvelle requête</a></p>
 
 {% endblock %}
-
-
-
-
-
-
-
-
