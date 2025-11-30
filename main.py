@@ -19,7 +19,6 @@ from auth import hash_password, verify_password
 # --------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Démarrage - initialisation de la base de données
     print("🔄 Démarrage de l'application...")
     try:
         await db.init_db()
@@ -27,10 +26,9 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"❌ Erreur lors de l'initialisation de la base: {e}")
         raise
-    
+
     yield
-    
-    # Arrêt - fermeture propre des connexions
+
     print("🔄 Arrêt de l'application...")
     try:
         await db.close()
@@ -43,7 +41,6 @@ app = FastAPI(
     title="Gestion des Requêtes Universitaires",
     lifespan=lifespan
 )
-
 
 # --------------------------------------------------------
 # Config templates + static
@@ -80,7 +77,6 @@ def verify_user_cookie(cookie_data: str) -> dict | None:
 
         data_json = base64.b64decode(data_b64).decode()
         return json.loads(data_json)
-
     except Exception:
         return None
 
@@ -101,7 +97,7 @@ def get_current_user(user_data: str = Cookie(None, alias="user_data")):
 # --------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("base.html", {"request": request})
+    return templates.TemplateResponse("home.html", {"request": request})
 
 
 @app.get("/register", response_class=HTMLResponse)
@@ -123,7 +119,6 @@ async def register_user(request: Request):
             password=form.get("password")
         )
 
-        # Vérifier email / matricule
         user_exists = await db.fetch_one(
             "SELECT user_id FROM users WHERE email = %s OR matricule = %s",
             (user_data.email, user_data.matricule)
@@ -132,7 +127,6 @@ async def register_user(request: Request):
         if user_exists:
             raise HTTPException(status_code=400, detail="Email ou matricule déjà utilisé")
 
-        # Insert MySQL
         await db.execute_query(
             """INSERT INTO users (matricule, name, last_name, email, phone, password)
                VALUES (%s, %s, %s, %s, %s, %s)""",
@@ -276,49 +270,6 @@ async def submit_request(request: Request, current_user=Depends(get_current_user
         })
 
 
-
-
-
-"""
-@app.get("/my-requests", response_class=HTMLResponse)
-async def my_requests(request: Request, current_user=Depends(get_current_user)):
-    try:
-        print(f"🔍 DEBUG - User connecté: {current_user}")
-        
-        # Vérifiez aussi toutes les requêtes dans la base
-        all_requests = await db.fetch_all("SELECT user_id, request_id FROM requests")
-        print(f"🔍 DEBUG - Toutes les requêtes dans la DB: {all_requests}")
-        
-        rows = await db.fetch_all(
-            """"""SELECT request_id, all_name, state, matricule, cycle, level, nom_code_ue,
-                      note_exam, note_cc, note_tp, note_tpe, autre, comment,
-                      just_p, created_at
-               FROM requests
-               WHERE user_id = %s
-               ORDER BY created_at DESC"""""",
-            (current_user["user_id"],)
-        )
-        
-        print(f"🔍 DEBUG - Requêtes trouvées pour user_id {current_user['user_id']}: {len(rows)}")
-        
-        return templates.TemplateResponse("my-requests.html", {
-            "request": request,
-            "user": current_user,
-            "requests": rows
-        })
-
-    except Exception as e:
-        print(f"❌ Erreur dans my_requests: {e}")
-        return templates.TemplateResponse("my-requests.html", {
-            "request": request,
-            "user": current_user,
-            "error": str(e),
-            "requests": []
-        })
-"""
-
-
-
 @app.get("/my-requests", response_class=HTMLResponse)
 async def my_requests(request: Request, current_user=Depends(get_current_user)):
     try:
@@ -355,22 +306,16 @@ async def logout():
 
 
 # --------------------------------------------------------
-# Debug - AMÉLIORÉ
+# Debug
 # --------------------------------------------------------
 @app.get("/test-db")
 async def test_db():
-    """Test complet de la connexion et des opérations de base"""
     try:
-        # Test de connexion
         connection_test = await db.test_connection()
-        
-        # Test des tables
         users_count = await db.fetch_one("SELECT COUNT(*) AS count FROM users")
         requests_count = await db.fetch_one("SELECT COUNT(*) AS count FROM requests")
-        
-        # Test d'écriture
         test_insert = await db.execute_query("SELECT 1 as test")
-        
+
         return {
             "status": "success",
             "connection": connection_test,
@@ -381,29 +326,11 @@ async def test_db():
             "write_test": "ok" if test_insert is not None else "failed"
         }
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return {"status": "error", "message": str(e)}
 
 
 @app.get("/debug-requests")
 async def debug_requests():
-    """Route temporaire pour debug"""
     try:
         all_requests = await db.fetch_all("""
             SELECT r.request_id, r.user_id, r.all_name, u.name, u.last_name 
@@ -415,11 +342,8 @@ async def debug_requests():
         return {"status": "error", "message": str(e)}
 
 
-
-
 @app.get("/db-status")
 async def db_status():
-    """Statut simplifié de la base de données"""
     try:
         users = await db.fetch_one("SELECT COUNT(*) AS count FROM users")
         requests = await db.fetch_one("SELECT COUNT(*) AS count FROM requests")
@@ -432,16 +356,11 @@ async def db_status():
             "requests": requests["count"]
         }
     except Exception as e:
-        return {
-            "status": "error",
-            "connected": False,
-            "message": str(e)
-        }
+        return {"status": "error", "connected": False, "message": str(e)}
 
 
 @app.get("/health")
 async def health_check():
-    """Endpoint de santé pour Render"""
     try:
         is_connected = await db.is_connected()
         return {
@@ -457,9 +376,6 @@ async def health_check():
         }
 
 
-# --------------------------------------------------------
-# Run (dev local)
-# --------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
