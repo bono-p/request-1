@@ -270,16 +270,73 @@ async def submit_request(request: Request, current_user=Depends(get_current_user
         })
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.get("/my-requests", response_class=HTMLResponse)
+async def my_requests(request: Request, current_user=Depends(get_current_user)):
+    """
+    Affiche toutes les requêtes soumises par l'utilisateur connecté.
+    """
+    try:
+        # On récupère toutes les colonnes nécessaires, y compris 'state'
+        rows = await db.fetch_all(
+            """SELECT request_id, all_name, matricule, cycle, level, nom_code_ue,
+                      note_exam, note_cc, note_tp, note_tpe, autre, comment,
+                      just_p, created_at, state
+               FROM requests
+               WHERE user_id = %s
+               ORDER BY created_at DESC""",
+            (current_user["user_id"],)
+        )
+
+        # On renvoie les données au template
+        return templates.TemplateResponse("my-requests.html", {
+            "request": request,
+            "user": current_user,
+            "requests": rows
+        })
+
+    except Exception as e:
+        # En cas d'erreur, on loggue et on renvoie une liste vide pour éviter le crash
+        print(f"❌ Erreur dans /my-requests : {e}")
+        return templates.TemplateResponse("my-requests.html", {
+            "request": request,
+            "user": current_user,
+            "error": str(e),
+            "requests": []
+        })
+
+
+
+
+
+
+
+
+
+"""
 @app.get("/my-requests", response_class=HTMLResponse)
 async def my_requests(request: Request, current_user=Depends(get_current_user)):
     try:
         rows = await db.fetch_all(
-            """SELECT request_id, all_name, matricule, cycle, level, nom_code_ue,
+            """"""SELECT request_id, all_name, matricule, cycle, level, nom_code_ue,
                       note_exam, note_cc, note_tp, note_tpe, autre, comment,
                       just_p, created_at
                FROM requests
                WHERE user_id = %s
-               ORDER BY created_at DESC""",
+               ORDER BY created_at DESC"""""",
             (current_user["user_id"],)
         )
 
@@ -296,6 +353,8 @@ async def my_requests(request: Request, current_user=Depends(get_current_user)):
             "error": str(e),
             "requests": []
         })
+"""
+
 
 
 @app.get("/logout")
