@@ -18,7 +18,7 @@ class Database:
         self.conn = None
 
     async def connect(self):
-        """Établit la connexion MySQL (thread-safe)."""
+        """"""Établit la connexion MySQL (thread-safe).""""""
         if self.conn and self.conn.open:
             return self.conn
 
@@ -38,12 +38,12 @@ class Database:
         return self.conn
 
     async def init_db(self):
-        """Créer les tables si elles n’existent pas (idempotent)."""
+        """"""Créer les tables si elles n’existent pas (idempotent).""""""
         conn = await self.connect()
 
         async def _init():
             with conn.cursor() as cur:
-                cur.execute("""
+                cur.execute(""""""
                     CREATE TABLE IF NOT EXISTS users (
                         user_id INT AUTO_INCREMENT PRIMARY KEY,
                         matricule VARCHAR(15) UNIQUE NOT NULL,
@@ -54,9 +54,9 @@ class Database:
                         password TEXT NOT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
+                """""")
 
-                cur.execute("""
+                cur.execute(""""""
                     CREATE TABLE IF NOT EXISTS requests (
                         request_id INT AUTO_INCREMENT PRIMARY KEY,
                         user_id INT NOT NULL,
@@ -75,7 +75,7 @@ class Database:
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
                     )
-                """)
+                """""")
 
             conn.commit()
 
@@ -83,7 +83,7 @@ class Database:
         print("✅ Base de données MySQL initialisée !")
 
     async def execute_query(self, query, params=None):
-        """Exécuter INSERT, UPDATE, DELETE."""
+        """"""Exécuter INSERT, UPDATE, DELETE.""""""
         conn = await self.connect()
 
         def _execute():
@@ -95,7 +95,7 @@ class Database:
         return await asyncio.to_thread(_execute)
 
     async def fetch_one(self, query, params=None):
-        """Récupère une seule ligne."""
+        """"""Récupère une seule ligne.""""""
         conn = await self.connect()
 
         def _fetch():
@@ -106,7 +106,7 @@ class Database:
         return await asyncio.to_thread(_fetch)
 
     async def fetch_all(self, query, params=None):
-        """Récupère plusieurs lignes."""
+        """"""Récupère plusieurs lignes.""""""
         conn = await self.connect()
 
         def _fetchall():
@@ -117,7 +117,7 @@ class Database:
         return await asyncio.to_thread(_fetchall)
 
     async def test_connection(self):
-        """Tester la connexion."""
+        """"""Tester la connexion.""""""
         try:
             result = await self.fetch_one("SELECT VERSION()")
             return {"status": "success", "version": result}
